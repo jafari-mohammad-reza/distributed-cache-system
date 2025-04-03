@@ -1,0 +1,12 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/broker ./cmd/broker.go"
+  bin = "tmp/broker"
+  full_bin = "tmp/broker"
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  exclude_dir = ["tmp", "vendor"]
+  follow_symlink = true
+  kill_delay = 500

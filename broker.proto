@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package broker;
+
+option go_package = "/broker";
+
+message Error {
+    string message = 1; 
+}
+
+service Broker {
+    rpc Pub(PubRequest) returns (Error);
+    rpc Sub(SubRequest) returns (stream Message);
+}
+
+
+message PubRequest {
+    string topic = 1;
+   bytes payload = 2;
+}
+
+message SubRequest {
+    string topic = 1;
+}
+
+message Message {
+    bytes payload = 1;
+}
