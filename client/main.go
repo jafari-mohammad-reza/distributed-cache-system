@@ -2,21 +2,36 @@ package client
 
 import (
 	"fmt"
-	"net"
+	"log"
 
-	pb "github.com/jafari-mohammad-reza/distributed-cache-system/pb"
-
+	"github.com/jafari-mohammad-reza/distributed-cache-system/pb"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func InitGrpcServer() error {
-	ln, err := net.Listen("tcp", ":6090")
-	if err != nil {
-		return fmt.Errorf("error in listening to port 6090: %s", err.Error())
-	}
-	rpcServer := grpc.NewServer()
-	pb.RegisterCommandServer(rpcServer, NewCommandService())
+var commandClient pb.CommandClient
 
-	fmt.Println("client running on port 6090")
-	return rpcServer.Serve(ln)
+func init() {
+	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", 6090), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to broker: %v", err)
+	}
+	commandClient = pb.NewCommandClient(conn)
+}
+
+var rootCmd = &cobra.Command{
+	Use:   "dcs",
+	Short: "distributed cache system,",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Available Commands:")
+		for _, c := range cmd.Commands() {
+			fmt.Printf("  %-10s %s\n", c.Name(), c.Short)
+		}
+	},
+}
+
+func InitClient() error {
+
+	return rootCmd.Execute()
 }

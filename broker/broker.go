@@ -103,25 +103,27 @@ func InitBroker(port int) error {
 }
 
 type MsgBroker struct {
-	Port int
+	Port   int
+	conn *grpc.ClientConn
+	client BrokerClient
 }
 
 func NewMsgBroker(port int) *MsgBroker {
+	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to broker: %v", err)
+	}
+
+	client := NewBrokerClient(conn)
 	return &MsgBroker{
-		Port: port,
+		Port:   port,
+		conn: conn,
+		client: client,
 	}
 }
 
 func (mb *MsgBroker) PublishMessage(topic, message string) {
-	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", mb.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Failed to connect to broker: %v", err)
-	}
-	defer conn.Close()
-
-	client := NewBrokerClient(conn)
-
-	_, err = client.Pub(context.Background(), &PubRequest{
+	_, err := mb.client.Pub(context.Background(), &PubRequest{
 		Topic:   topic,
 		Payload: []byte(message),
 	})
@@ -131,15 +133,7 @@ func (mb *MsgBroker) PublishMessage(topic, message string) {
 	fmt.Println("Message Published to topic:", topic)
 }
 func (mb *MsgBroker) SubscribeToTopic(topic string, receiver chan *Message) {
-	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", mb.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Failed to connect: %v", err)
-	}
-	defer conn.Close()
-
-	client := NewBrokerClient(conn)
-
-	stream, err := client.Sub(context.Background(), &SubRequest{Topic: topic})
+	stream, err := mb.client.Sub(context.Background(), &SubRequest{Topic: topic})
 	if err != nil {
 		log.Fatalf("Failed to subscribe: %v", err)
 	}
