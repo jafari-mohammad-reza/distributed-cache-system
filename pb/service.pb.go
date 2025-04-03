@@ -4,7 +4,7 @@
 // 	protoc        v5.29.3
 // source: service.proto
 
-package client
+package pb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -357,28 +357,28 @@ var File_service_proto protoreflect.FileDescriptor
 
 const file_service_proto_rawDesc = "" +
 	"\n" +
-	"\rservice.proto\x12\x06client\"!\n" +
+	"\rservice.proto\x12\x02pb\"!\n" +
 	"\x05Error\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"5\n" +
-	"\x0eSetCmdResponse\x12#\n" +
-	"\x05error\x18\x01 \x01(\v2\r.client.ErrorR\x05error\"I\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"1\n" +
+	"\x0eSetCmdResponse\x12\x1f\n" +
+	"\x05error\x18\x01 \x01(\v2\t.pb.ErrorR\x05error\"I\n" +
 	"\rSetCmdRequest\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\fR\x05value\x12\x10\n" +
 	"\x03ttl\x18\x03 \x01(\x05R\x03ttl\"!\n" +
 	"\rGetCmdRequest\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\"K\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\"G\n" +
 	"\x0eGetCmdResponse\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\fR\x05value\x12#\n" +
-	"\x05error\x18\x02 \x01(\v2\r.client.ErrorR\x05error\"$\n" +
+	"\x05value\x18\x01 \x01(\fR\x05value\x12\x1f\n" +
+	"\x05error\x18\x02 \x01(\v2\t.pb.ErrorR\x05error\"$\n" +
 	"\x10DeleteCmdRequest\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\"8\n" +
-	"\x11DeleteCmdResponse\x12#\n" +
-	"\x05error\x18\x01 \x01(\v2\r.client.ErrorR\x05error2\xb1\x01\n" +
-	"\aCommand\x124\n" +
-	"\x03Set\x12\x15.client.SetCmdRequest\x1a\x16.client.SetCmdResponse\x124\n" +
-	"\x03Get\x12\x15.client.GetCmdRequest\x1a\x16.client.GetCmdResponse\x12:\n" +
-	"\x03Del\x12\x18.client.DeleteCmdRequest\x1a\x19.client.DeleteCmdResponseB\tZ\a/clientb\x06proto3"
+	"\x03key\x18\x01 \x01(\tR\x03key\"4\n" +
+	"\x11DeleteCmdResponse\x12\x1f\n" +
+	"\x05error\x18\x01 \x01(\v2\t.pb.ErrorR\x05error2\x99\x01\n" +
+	"\aCommand\x12,\n" +
+	"\x03Set\x12\x11.pb.SetCmdRequest\x1a\x12.pb.SetCmdResponse\x12,\n" +
+	"\x03Get\x12\x11.pb.GetCmdRequest\x1a\x12.pb.GetCmdResponse\x122\n" +
+	"\x03Del\x12\x14.pb.DeleteCmdRequest\x1a\x15.pb.DeleteCmdResponseB\x05Z\x03/pbb\x06proto3"
 
 var (
 	file_service_proto_rawDescOnce sync.Once
@@ -394,24 +394,24 @@ func file_service_proto_rawDescGZIP() []byte {
 
 var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_service_proto_goTypes = []any{
-	(*Error)(nil),             // 0: client.Error
-	(*SetCmdResponse)(nil),    // 1: client.SetCmdResponse
-	(*SetCmdRequest)(nil),     // 2: client.SetCmdRequest
-	(*GetCmdRequest)(nil),     // 3: client.GetCmdRequest
-	(*GetCmdResponse)(nil),    // 4: client.GetCmdResponse
-	(*DeleteCmdRequest)(nil),  // 5: client.DeleteCmdRequest
-	(*DeleteCmdResponse)(nil), // 6: client.DeleteCmdResponse
+	(*Error)(nil),             // 0: pb.Error
+	(*SetCmdResponse)(nil),    // 1: pb.SetCmdResponse
+	(*SetCmdRequest)(nil),     // 2: pb.SetCmdRequest
+	(*GetCmdRequest)(nil),     // 3: pb.GetCmdRequest
+	(*GetCmdResponse)(nil),    // 4: pb.GetCmdResponse
+	(*DeleteCmdRequest)(nil),  // 5: pb.DeleteCmdRequest
+	(*DeleteCmdResponse)(nil), // 6: pb.DeleteCmdResponse
 }
 var file_service_proto_depIdxs = []int32{
-	0, // 0: client.SetCmdResponse.error:type_name -> client.Error
-	0, // 1: client.GetCmdResponse.error:type_name -> client.Error
-	0, // 2: client.DeleteCmdResponse.error:type_name -> client.Error
-	2, // 3: client.Command.Set:input_type -> client.SetCmdRequest
-	3, // 4: client.Command.Get:input_type -> client.GetCmdRequest
-	5, // 5: client.Command.Del:input_type -> client.DeleteCmdRequest
-	1, // 6: client.Command.Set:output_type -> client.SetCmdResponse
-	4, // 7: client.Command.Get:output_type -> client.GetCmdResponse
-	6, // 8: client.Command.Del:output_type -> client.DeleteCmdResponse
+	0, // 0: pb.SetCmdResponse.error:type_name -> pb.Error
+	0, // 1: pb.GetCmdResponse.error:type_name -> pb.Error
+	0, // 2: pb.DeleteCmdResponse.error:type_name -> pb.Error
+	2, // 3: pb.Command.Set:input_type -> pb.SetCmdRequest
+	3, // 4: pb.Command.Get:input_type -> pb.GetCmdRequest
+	5, // 5: pb.Command.Del:input_type -> pb.DeleteCmdRequest
+	1, // 6: pb.Command.Set:output_type -> pb.SetCmdResponse
+	4, // 7: pb.Command.Get:output_type -> pb.GetCmdResponse
+	6, // 8: pb.Command.Del:output_type -> pb.DeleteCmdResponse
 	6, // [6:9] is the sub-list for method output_type
 	3, // [3:6] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name

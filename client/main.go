@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 
+	pb "github.com/jafari-mohammad-reza/distributed-cache-system/pb"
+
 	"google.golang.org/grpc"
 )
 
@@ -13,7 +15,8 @@ func InitGrpcServer() error {
 		return fmt.Errorf("error in listening to port 6090: %s", err.Error())
 	}
 	rpcServer := grpc.NewServer()
-	RegisterCommandServer(rpcServer, NewCommandService())
+	pb.RegisterCommandServer(rpcServer, NewCommandService())
 
+	fmt.Println("client running on port 6090")
 	return rpcServer.Serve(ln)
 }

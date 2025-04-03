@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package client;
+package pb;
 
-option go_package = "/client";
+option go_package = "/pb";
 
 message Error {
     string message = 1; 

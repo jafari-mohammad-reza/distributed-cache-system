@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: service.proto
 
-package client
+package pb
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Command_Set_FullMethodName = "/client.Command/Set"
-	Command_Get_FullMethodName = "/client.Command/Get"
-	Command_Del_FullMethodName = "/client.Command/Del"
+	Command_Set_FullMethodName = "/pb.Command/Set"
+	Command_Get_FullMethodName = "/pb.Command/Get"
+	Command_Del_FullMethodName = "/pb.Command/Del"
 )
 
 // CommandClient is the client API for Command service.
@@ -176,7 +176,7 @@ func _Command_Del_Handler(srv interface{}, ctx context.Context, dec func(interfa
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Command_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "client.Command",
+	ServiceName: "pb.Command",
 	HandlerType: (*CommandServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

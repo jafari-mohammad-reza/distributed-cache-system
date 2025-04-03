@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/jafari-mohammad-reza/distributed-cache-system/broker"
@@ -14,6 +13,5 @@ func main() {
 			log.Fatal(err.Error())
 		}
 	}()
-	fmt.Println("start broker on 6091")
 	select {}
 }

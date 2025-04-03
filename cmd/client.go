@@ -14,6 +14,5 @@ func main() {
 			log.Fatal(err.Error())
 		}
 	}()
-	fmt.Println("Initializing grpc server")
 	select {}
 }
