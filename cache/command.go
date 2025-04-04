@@ -45,14 +45,14 @@ func NewNodeService() *NodeService {
 func (n *NodeService) GetLog(ctx context.Context, req *pb.GetLogRequest) (*pb.GetLogResponse, error) {
 	var start, end time.Time
 	if req.Start != "" {
-		s, err := time.Parse(time.TimeOnly, req.Start)
+		s, err := time.Parse(time.RFC3339, req.Start)
 		if err != nil {
 			return &pb.GetLogResponse{Error: &pb.Error{Message: err.Error()}}, nil
 		}
 		start = s
 	}
 	if req.End != "" {
-		e, err := time.Parse(time.TimeOnly, req.End)
+		e, err := time.Parse(time.RFC3339, req.End)
 		if err != nil {
 			return &pb.GetLogResponse{Error: &pb.Error{Message: err.Error()}}, nil
 		}

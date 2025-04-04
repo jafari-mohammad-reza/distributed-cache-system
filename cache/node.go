@@ -1,14 +1,17 @@
 package cache
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand/v2"
 	"net"
+	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/jafari-mohammad-reza/distributed-cache-system/broker"
 	pb "github.com/jafari-mohammad-reza/distributed-cache-system/pb"
@@ -86,25 +89,110 @@ func (n *Node) registerNode() {
 	}
 }
 func (n *Node) recoverLog() {
-	if len(n.discoveredNodes) == 0 || n.Rule == Master {
-		return
-	}
-	var leader int
-	for port, rule := range n.discoveredNodes {
-		if rule == Master {
-			leader = port
-			break
-		}
-	}
-	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", leader), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Failed to connect to another node: %v", err)
+	entries := n.loadLocalLog()
+	for _, entry := range entries {
+		n.execCommand(entry.Command, entry.Args)
 	}
 
-	client := pb.NewNodeClient(conn)
-	resp, err := client.GetLog(context.Background(), &pb.GetLogRequest{})
-	if err != nil {
-		log.Fatal(err.Error())
+	if n.Rule == Master || len(n.discoveredNodes) == 0 {
+		return
 	}
-	fmt.Println("respData", string(resp.Data), resp.Error)
+
+	leaderPort := n.findLeader()
+	if leaderPort == 0 {
+		log.Println("No leader found for recovery")
+		return
+	}
+
+	n.syncFromLeader(leaderPort, entries)
+}
+func (n *Node) loadLocalLog() []CommandLog {
+	file, err := os.Open("aof.log")
+	if err != nil {
+		if os.IsNotExist(err) {
+			f, _ := os.Create("aof.log")
+			defer f.Close()
+		}
+		return nil
+	}
+	defer file.Close()
+
+	var entries []CommandLog
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var entry CommandLog
+		if err := json.Unmarshal(scanner.Bytes(), &entry); err != nil {
+			continue
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries
+}
+func (n *Node) findLeader() int {
+	for port, rule := range n.discoveredNodes {
+		if rule == Master {
+			return port
+		}
+	}
+	return 0
+}
+func (n *Node) syncFromLeader(leader int, localEntries []CommandLog) {
+	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", leader), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to leader node: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewNodeClient(conn)
+
+	var lastTimestamp string
+	if len(localEntries) > 0 {
+		lastTimestamp = localEntries[len(localEntries)-1].TimeStamp.Format(time.RFC3339Nano)
+	}
+
+	resp, err := client.GetLog(context.Background(), &pb.GetLogRequest{Start: lastTimestamp})
+	if err != nil {
+		log.Fatalf("Failed to sync logs from leader: %v", err)
+	}
+
+	if resp.Error != nil {
+		log.Printf("Leader error: %s", resp.Error.Message)
+		return
+	}
+
+	var remoteEntries []CommandLog
+	if err := json.Unmarshal(resp.Data, &remoteEntries); err != nil {
+		log.Printf("Failed to parse leader logs: %v", err)
+		return
+	}
+
+	for _, entry := range remoteEntries {
+		n.execCommand(entry.Command, entry.Args)
+	}
+}
+func (n *Node) execCommand(command string, args []interface{}) {
+	switch command {
+	case "SET":
+		if len(args) < 3 {
+			log.Println("Invalid SET args:", args)
+			return
+		}
+		key, _ := args[0].(string)
+		val, _ := args[1].(string)
+
+		expFloat, ok := args[2].(float64)
+		if !ok {
+			log.Println("Invalid TTL in SET:", args[2])
+			return
+		}
+		n.storage.Set(key, []byte(val), time.Duration(expFloat))
+	case "DEL":
+		if len(args) < 1 {
+			log.Println("Invalid DEL args:", args)
+			return
+		}
+		key, _ := args[0].(string)
+		n.storage.Del(key)
+	}
 }
