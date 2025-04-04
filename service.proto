@@ -18,7 +18,16 @@ service Command {
 service Discovery {
     rpc GetLeader(google.protobuf.Empty) returns (DiscoveryResponse);
 }
-
+service Node {
+    rpc GetLog(GetLogRequest) returns (GetLogResponse);
+}
+message GetLogRequest {
+    string start =1;
+    string end=2;
+}
+message GetLogResponse {
+ bytes data =1;   
+}
 message DiscoveryResponse {
     int32 port = 1;
 }

@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-
-	if err := cache.InitCacheNode(); err != nil {
+	node := cache.NewNode()
+	if err := node.InitCacheNode(); err != nil {
 		log.Fatal(err.Error())
 	}
 }

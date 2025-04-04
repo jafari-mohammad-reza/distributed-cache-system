@@ -23,3 +23,14 @@ func (c *CommandService) Get(ctx context.Context, req *pb.GetCmdRequest) (*pb.Ge
 func (c *CommandService) Del(ctx context.Context, req *pb.DeleteCmdRequest) (*pb.DeleteCmdResponse, error) {
 	return nil, nil
 }
+
+type NodeService struct {
+	pb.UnimplementedNodeServer
+}
+func NewNodeService() *NodeService {
+	return &NodeService{}
+}
+
+func (n *NodeService) GetLog(context.Context, *pb.GetLogRequest) (*pb.GetLogResponse, error) {
+	return nil, nil
+}

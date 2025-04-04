@@ -44,39 +44,40 @@ func NewNode() *Node {
 func newRpcServer(port int) *grpc.Server {
 	rpcServer := grpc.NewServer()
 	pb.RegisterCommandServer(rpcServer, NewCommandService())
+	pb.RegisterNodeServer(rpcServer, NewNodeService())
 	return rpcServer
 }
-func InitCacheNode() error {
-	node := NewNode()
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", node.Port))
+func (n *Node) InitCacheNode() error {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", n.Port))
 	if err != nil {
-		return fmt.Errorf("error in listening to port %d: %s", node.Port, err.Error())
+		return fmt.Errorf("error in listening to port %d: %s", n.Port, err.Error())
 	}
-	go func() {
-		node.msgBroker.PublishMessage("service-discovery-register", fmt.Append(nil, node.Port))
-		for msg := range node.msgBroker.SubscribeToTopic("service-discovery", 1) {
-			var payload map[string]string
-			err := json.Unmarshal(msg.Payload, &payload)
-			if err != nil {
-				continue
-			}
-			port, err := strconv.Atoi(payload["Port"])
-			if err != nil {
-				continue
-			}
-			rule := NodeRule(payload["Rule"])
-			fmt.Println("received port", port, node.Port, payload["Rule"])
-
-			node.mu.Lock()
-			if port == node.Port {
-				node.Rule = rule
-			} else {
-				node.discoveredNodes[port] = rule
-			}
-			fmt.Println("NODE", node.Port, node.Rule , node.discoveredNodes)
-			node.mu.Unlock()
+	go n.registerNode()
+	fmt.Printf("cache running on port: %d\n", n.Port)
+	return n.RpcServer.Serve(ln)
+}
+func (n *Node) registerNode() {
+	n.msgBroker.PublishMessage("service-discovery-register", fmt.Append(nil, n.Port))
+	for msg := range n.msgBroker.SubscribeToTopic("service-discovery", 1) {
+		var payload map[string]string
+		err := json.Unmarshal(msg.Payload, &payload)
+		if err != nil {
+			continue
 		}
-	}()
-	fmt.Printf("cache running on port: %d\n", node.Port)
-	return node.RpcServer.Serve(ln)
+		port, err := strconv.Atoi(payload["Port"])
+		if err != nil {
+			continue
+		}
+		rule := NodeRule(payload["Rule"])
+		fmt.Println("received port", port, n.Port, payload["Rule"])
+
+		n.mu.Lock()
+		if port == n.Port {
+			n.Rule = rule
+		} else {
+			n.discoveredNodes[port] = rule
+		}
+		fmt.Println("NODE", n.Port, n.Rule, n.discoveredNodes)
+		n.mu.Unlock()
+	}
 }

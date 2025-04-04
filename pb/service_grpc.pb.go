@@ -298,3 +298,105 @@ var Discovery_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "service.proto",
 }
+
+const (
+	Node_GetLog_FullMethodName = "/pb.Node/GetLog"
+)
+
+// NodeClient is the client API for Node service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type NodeClient interface {
+	GetLog(ctx context.Context, in *GetLogRequest, opts ...grpc.CallOption) (*GetLogResponse, error)
+}
+
+type nodeClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewNodeClient(cc grpc.ClientConnInterface) NodeClient {
+	return &nodeClient{cc}
+}
+
+func (c *nodeClient) GetLog(ctx context.Context, in *GetLogRequest, opts ...grpc.CallOption) (*GetLogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetLogResponse)
+	err := c.cc.Invoke(ctx, Node_GetLog_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// NodeServer is the server API for Node service.
+// All implementations must embed UnimplementedNodeServer
+// for forward compatibility.
+type NodeServer interface {
+	GetLog(context.Context, *GetLogRequest) (*GetLogResponse, error)
+	mustEmbedUnimplementedNodeServer()
+}
+
+// UnimplementedNodeServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedNodeServer struct{}
+
+func (UnimplementedNodeServer) GetLog(context.Context, *GetLogRequest) (*GetLogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLog not implemented")
+}
+func (UnimplementedNodeServer) mustEmbedUnimplementedNodeServer() {}
+func (UnimplementedNodeServer) testEmbeddedByValue()              {}
+
+// UnsafeNodeServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to NodeServer will
+// result in compilation errors.
+type UnsafeNodeServer interface {
+	mustEmbedUnimplementedNodeServer()
+}
+
+func RegisterNodeServer(s grpc.ServiceRegistrar, srv NodeServer) {
+	// If the following call pancis, it indicates UnimplementedNodeServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&Node_ServiceDesc, srv)
+}
+
+func _Node_GetLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServer).GetLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Node_GetLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServer).GetLog(ctx, req.(*GetLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Node_ServiceDesc is the grpc.ServiceDesc for Node service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Node_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "pb.Node",
+	HandlerType: (*NodeServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetLog",
+			Handler:    _Node_GetLog_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "service.proto",
+}
