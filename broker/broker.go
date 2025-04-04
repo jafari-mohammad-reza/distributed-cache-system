@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	sync "sync"
+	"sync"
 
 	"slices"
 
@@ -25,19 +25,23 @@ type Subscriber struct {
 
 type Broker struct {
 	subscribers map[string][]*Subscriber
-	Queue       map[string]*Message // TODO: implement queue
+	Queue       map[string][]*Message
 	mutex       sync.Mutex
 }
 
 func NewBroker() *Broker {
 	return &Broker{
 		subscribers: make(map[string][]*Subscriber),
+		Queue:       make(map[string][]*Message),
 	}
 }
 
 func (b *BrokerService) Pub(ctx context.Context, req *PubRequest) (*Error, error) {
 	b.broker.mutex.Lock()
 	defer b.broker.mutex.Unlock()
+
+	b.broker.Queue[req.Topic] = append(b.broker.Queue[req.Topic], &Message{Payload: req.Payload})
+
 	if subs, exists := b.broker.subscribers[req.Topic]; exists {
 		for _, sub := range subs {
 			select {
@@ -53,12 +57,18 @@ func (b *BrokerService) Pub(ctx context.Context, req *PubRequest) (*Error, error
 
 func (b *BrokerService) Sub(req *SubRequest, stream Broker_SubServer) error {
 	sub := &Subscriber{
-		Channel:     make(chan *Message, 10), // TODO make size dynamic
+		Channel:     make(chan *Message, 10),
 		Unsubscribe: make(chan bool),
 	}
 
 	b.broker.mutex.Lock()
 	b.broker.subscribers[req.Topic] = append(b.broker.subscribers[req.Topic], sub)
+
+	if queuedMsgs, exists := b.broker.Queue[req.Topic]; exists {
+		for _, msg := range queuedMsgs {
+			sub.Channel <- msg
+		}
+	}
 	b.broker.mutex.Unlock()
 
 	for {
@@ -132,6 +142,7 @@ func (mb *MsgBroker) PublishMessage(topic string, data []byte) {
 	}
 	fmt.Println("Message Published to topic:", topic)
 }
+
 func (mb *MsgBroker) SubscribeToTopic(topic string, limit int) <-chan *Message {
 	receiver := make(chan *Message, limit)
 

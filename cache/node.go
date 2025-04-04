@@ -73,7 +73,7 @@ func InitCacheNode() error {
 			} else {
 				node.discoveredNodes[port] = rule
 			}
-			fmt.Println("NODE", node.Port, node.Rule)
+			fmt.Println("NODE", node.Port, node.Rule , node.discoveredNodes)
 			node.mu.Unlock()
 		}
 	}()
