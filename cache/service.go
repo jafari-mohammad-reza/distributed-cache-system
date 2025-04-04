@@ -32,7 +32,9 @@ func NewDiscoveryService(port int) *DiscoveryService {
 	}
 }
 func (ds *DiscoveryService) GetLeader(ctx context.Context, req *emptypb.Empty) (*pb.DiscoveryResponse, error) {
-	return nil, nil
+	return &pb.DiscoveryResponse{
+		Port: int32(ds.LeaderNode),
+	}, nil
 }
 
 func (ds *DiscoveryService) InitDiscoveryService() error {

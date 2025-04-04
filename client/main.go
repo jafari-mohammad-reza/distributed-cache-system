@@ -3,23 +3,15 @@ package client
 import (
 	"fmt"
 	"log"
+	"strconv"
 
-	"github.com/jafari-mohammad-reza/distributed-cache-system/pb"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
-var commandClient pb.CommandClient
+var clientService *ClientService
 
 func init() {
-	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", 6090), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Failed to connect to broker: %v", err)
-	}
-
-	fmt.Println("command client created")
-	commandClient = pb.NewCommandClient(conn)
+	clientService = NewClientService()
 }
 
 var rootCmd = &cobra.Command{
@@ -33,7 +25,63 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+var setCmd = &cobra.Command{
+	Use:   "set",
+	Short: "Set data with key,value,expirationSeconds",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 3 {
+			fmt.Println("Not enough args")
+			return
+		}
+		_, err := strconv.Atoi(args[2])
+		if err != nil {
+			fmt.Println("invalid ttl")
+			return
+		}
+		fmt.Println("set args", args)
+		if err := clientService.Set(args); err != nil {
+			log.Fatal(err.Error())
+			return
+		}
+	},
+}
+
+var getCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Get data using key",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			fmt.Println("Not enough args")
+			return
+		}
+		resp, err := clientService.Get(args)
+		if err != nil {
+			log.Fatal(err.Error())
+			return
+		}
+		fmt.Println(resp)
+	},
+}
+
+var delCmd = &cobra.Command{
+	Use:   "del",
+	Short: "Delete data using key",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			fmt.Println("Not enough args")
+			return
+		}
+		err := clientService.Del(args)
+		if err != nil {
+			log.Fatal(err.Error())
+			return
+		}
+	},
+}
+
 func InitClient() error {
-	// fetch leader first from discovery service before sending request
+	rootCmd.AddCommand(setCmd)
+	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(delCmd)
 	return rootCmd.Execute()
 }

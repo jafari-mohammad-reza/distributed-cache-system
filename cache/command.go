@@ -18,20 +18,43 @@ type CommandLog struct {
 
 type CommandService struct {
 	pb.UnimplementedCommandServer
+	node *Node
 }
 
-func NewCommandService() *CommandService {
-	return &CommandService{}
+func NewCommandService(node *Node) *CommandService {
+	return &CommandService{
+		node: node,
+	}
 }
 
 func (c *CommandService) Set(ctx context.Context, req *pb.SetCmdRequest) (*pb.SetCmdResponse, error) {
-	return nil, nil
+	err := c.node.storage.Set(req.Key, req.Value, time.Duration(req.Ttl)*time.Second)
+	if err != nil {
+		return &pb.SetCmdResponse{Error: &pb.Error{
+			Message: err.Error(),
+		}}, nil
+	}
+	return &pb.SetCmdResponse{}, nil
 }
 func (c *CommandService) Get(ctx context.Context, req *pb.GetCmdRequest) (*pb.GetCmdResponse, error) {
-	return nil, nil
+	res, err := c.node.storage.Get(req.Key)
+	if err != nil {
+		return &pb.GetCmdResponse{Error: &pb.Error{
+			Message: err.Error(),
+		}}, nil
+	}
+	return &pb.GetCmdResponse{
+		Value: res,
+	}, nil
 }
 func (c *CommandService) Del(ctx context.Context, req *pb.DeleteCmdRequest) (*pb.DeleteCmdResponse, error) {
-	return nil, nil
+	err := c.node.storage.Del(req.Key)
+	if err != nil {
+		return &pb.DeleteCmdResponse{Error: &pb.Error{
+			Message: err.Error(),
+		}}, nil
+	}
+	return &pb.DeleteCmdResponse{}, nil
 }
 
 type NodeService struct {

@@ -32,7 +32,6 @@ type Node struct {
 	Rule            NodeRule
 	Port            int
 	storage         *Storage
-	RpcServer       *grpc.Server
 	msgBroker       *broker.MsgBroker
 	discoveredNodes map[int]NodeRule
 }
@@ -41,26 +40,22 @@ func NewNode() *Node {
 	port := rand.IntN(7999-7000) + 7000
 	return &Node{
 		Port:            port,
-		RpcServer:       newRpcServer(port),
 		storage:         NewStorage(),
 		msgBroker:       broker.NewMsgBroker(6091),
 		discoveredNodes: make(map[int]NodeRule),
 	}
-}
-func newRpcServer(port int) *grpc.Server {
-	rpcServer := grpc.NewServer()
-	pb.RegisterCommandServer(rpcServer, NewCommandService())
-	pb.RegisterNodeServer(rpcServer, NewNodeService())
-	return rpcServer
 }
 func (n *Node) InitCacheNode() error {
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", n.Port))
 	if err != nil {
 		return fmt.Errorf("error in listening to port %d: %s", n.Port, err.Error())
 	}
+	rpcServer := grpc.NewServer()
+	pb.RegisterCommandServer(rpcServer, NewCommandService(n))
+	pb.RegisterNodeServer(rpcServer, NewNodeService())
 	go n.registerNode()
 	fmt.Printf("cache running on port: %d\n", n.Port)
-	return n.RpcServer.Serve(ln)
+	return rpcServer.Serve(ln)
 }
 func (n *Node) registerNode() {
 	n.msgBroker.PublishMessage("service-discovery-register", fmt.Append(nil, n.Port))
