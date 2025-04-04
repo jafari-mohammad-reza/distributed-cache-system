@@ -34,5 +34,6 @@ var rootCmd = &cobra.Command{
 }
 
 func InitClient() error {
+	// fetch leader first from discovery service before sending request
 	return rootCmd.Execute()
 }

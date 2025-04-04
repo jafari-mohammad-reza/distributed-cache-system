@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -190,6 +191,108 @@ var Command_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Del",
 			Handler:    _Command_Del_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "service.proto",
+}
+
+const (
+	Discovery_GetLeader_FullMethodName = "/pb.Discovery/GetLeader"
+)
+
+// DiscoveryClient is the client API for Discovery service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type DiscoveryClient interface {
+	GetLeader(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*DiscoveryResponse, error)
+}
+
+type discoveryClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDiscoveryClient(cc grpc.ClientConnInterface) DiscoveryClient {
+	return &discoveryClient{cc}
+}
+
+func (c *discoveryClient) GetLeader(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*DiscoveryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DiscoveryResponse)
+	err := c.cc.Invoke(ctx, Discovery_GetLeader_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DiscoveryServer is the server API for Discovery service.
+// All implementations must embed UnimplementedDiscoveryServer
+// for forward compatibility.
+type DiscoveryServer interface {
+	GetLeader(context.Context, *emptypb.Empty) (*DiscoveryResponse, error)
+	mustEmbedUnimplementedDiscoveryServer()
+}
+
+// UnimplementedDiscoveryServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedDiscoveryServer struct{}
+
+func (UnimplementedDiscoveryServer) GetLeader(context.Context, *emptypb.Empty) (*DiscoveryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeader not implemented")
+}
+func (UnimplementedDiscoveryServer) mustEmbedUnimplementedDiscoveryServer() {}
+func (UnimplementedDiscoveryServer) testEmbeddedByValue()                   {}
+
+// UnsafeDiscoveryServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DiscoveryServer will
+// result in compilation errors.
+type UnsafeDiscoveryServer interface {
+	mustEmbedUnimplementedDiscoveryServer()
+}
+
+func RegisterDiscoveryServer(s grpc.ServiceRegistrar, srv DiscoveryServer) {
+	// If the following call pancis, it indicates UnimplementedDiscoveryServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&Discovery_ServiceDesc, srv)
+}
+
+func _Discovery_GetLeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServer).GetLeader(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Discovery_GetLeader_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServer).GetLeader(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Discovery_ServiceDesc is the grpc.ServiceDesc for Discovery service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Discovery_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "pb.Discovery",
+	HandlerType: (*DiscoveryServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetLeader",
+			Handler:    _Discovery_GetLeader_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

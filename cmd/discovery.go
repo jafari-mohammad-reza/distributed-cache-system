@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-
-	if err := cache.InitCacheNode(); err != nil {
+	ds := cache.NewDiscoveryService(6090)
+	if err := ds.InitDiscoveryService(); err != nil {
 		log.Fatal(err.Error())
 	}
 }

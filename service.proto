@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
 package pb;
 
@@ -12,6 +13,14 @@ service Command {
     rpc Set(SetCmdRequest) returns (SetCmdResponse);
     rpc Get(GetCmdRequest) returns (GetCmdResponse);
     rpc Del(DeleteCmdRequest) returns (DeleteCmdResponse);
+}
+
+service Discovery {
+    rpc GetLeader(google.protobuf.Empty) returns (DiscoveryResponse);
+}
+
+message DiscoveryResponse {
+    int32 port = 1;
 }
 
 message SetCmdResponse{
