@@ -121,6 +121,7 @@ func (x *GetLogRequest) GetEnd() string {
 type GetLogResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Error         *Error                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -158,6 +159,13 @@ func (*GetLogResponse) Descriptor() ([]byte, []int) {
 func (x *GetLogResponse) GetData() []byte {
 	if x != nil {
 		return x.Data
+	}
+	return nil
+}
+
+func (x *GetLogResponse) GetError() *Error {
+	if x != nil {
+		return x.Error
 	}
 	return nil
 }
@@ -503,9 +511,10 @@ const file_service_proto_rawDesc = "" +
 	"\amessage\x18\x01 \x01(\tR\amessage\"7\n" +
 	"\rGetLogRequest\x12\x14\n" +
 	"\x05start\x18\x01 \x01(\tR\x05start\x12\x10\n" +
-	"\x03end\x18\x02 \x01(\tR\x03end\"$\n" +
+	"\x03end\x18\x02 \x01(\tR\x03end\"E\n" +
 	"\x0eGetLogResponse\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\fR\x04data\"'\n" +
+	"\x04data\x18\x01 \x01(\fR\x04data\x12\x1f\n" +
+	"\x05error\x18\x02 \x01(\v2\t.pb.ErrorR\x05error\"'\n" +
 	"\x11DiscoveryResponse\x12\x12\n" +
 	"\x04port\x18\x01 \x01(\x05R\x04port\"1\n" +
 	"\x0eSetCmdResponse\x12\x1f\n" +
@@ -559,24 +568,25 @@ var file_service_proto_goTypes = []any{
 	(*emptypb.Empty)(nil),     // 10: google.protobuf.Empty
 }
 var file_service_proto_depIdxs = []int32{
-	0,  // 0: pb.SetCmdResponse.error:type_name -> pb.Error
-	0,  // 1: pb.GetCmdResponse.error:type_name -> pb.Error
-	0,  // 2: pb.DeleteCmdResponse.error:type_name -> pb.Error
-	5,  // 3: pb.Command.Set:input_type -> pb.SetCmdRequest
-	6,  // 4: pb.Command.Get:input_type -> pb.GetCmdRequest
-	8,  // 5: pb.Command.Del:input_type -> pb.DeleteCmdRequest
-	10, // 6: pb.Discovery.GetLeader:input_type -> google.protobuf.Empty
-	1,  // 7: pb.Node.GetLog:input_type -> pb.GetLogRequest
-	4,  // 8: pb.Command.Set:output_type -> pb.SetCmdResponse
-	7,  // 9: pb.Command.Get:output_type -> pb.GetCmdResponse
-	9,  // 10: pb.Command.Del:output_type -> pb.DeleteCmdResponse
-	3,  // 11: pb.Discovery.GetLeader:output_type -> pb.DiscoveryResponse
-	2,  // 12: pb.Node.GetLog:output_type -> pb.GetLogResponse
-	8,  // [8:13] is the sub-list for method output_type
-	3,  // [3:8] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	0,  // 0: pb.GetLogResponse.error:type_name -> pb.Error
+	0,  // 1: pb.SetCmdResponse.error:type_name -> pb.Error
+	0,  // 2: pb.GetCmdResponse.error:type_name -> pb.Error
+	0,  // 3: pb.DeleteCmdResponse.error:type_name -> pb.Error
+	5,  // 4: pb.Command.Set:input_type -> pb.SetCmdRequest
+	6,  // 5: pb.Command.Get:input_type -> pb.GetCmdRequest
+	8,  // 6: pb.Command.Del:input_type -> pb.DeleteCmdRequest
+	10, // 7: pb.Discovery.GetLeader:input_type -> google.protobuf.Empty
+	1,  // 8: pb.Node.GetLog:input_type -> pb.GetLogRequest
+	4,  // 9: pb.Command.Set:output_type -> pb.SetCmdResponse
+	7,  // 10: pb.Command.Get:output_type -> pb.GetCmdResponse
+	9,  // 11: pb.Command.Del:output_type -> pb.DeleteCmdResponse
+	3,  // 12: pb.Discovery.GetLeader:output_type -> pb.DiscoveryResponse
+	2,  // 13: pb.Node.GetLog:output_type -> pb.GetLogResponse
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_service_proto_init() }

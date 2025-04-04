@@ -1,8 +1,10 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand/v2"
 	"net"
 	"strconv"
@@ -11,6 +13,7 @@ import (
 	"github.com/jafari-mohammad-reza/distributed-cache-system/broker"
 	pb "github.com/jafari-mohammad-reza/distributed-cache-system/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type NodeRule string
@@ -78,6 +81,30 @@ func (n *Node) registerNode() {
 			n.discoveredNodes[port] = rule
 		}
 		fmt.Println("NODE", n.Port, n.Rule, n.discoveredNodes)
+		go n.recoverLog()
 		n.mu.Unlock()
 	}
+}
+func (n *Node) recoverLog() {
+	if len(n.discoveredNodes) == 0 || n.Rule == Master {
+		return
+	}
+	var leader int
+	for port, rule := range n.discoveredNodes {
+		if rule == Master {
+			leader = port
+			break
+		}
+	}
+	conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", leader), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to another node: %v", err)
+	}
+
+	client := pb.NewNodeClient(conn)
+	resp, err := client.GetLog(context.Background(), &pb.GetLogRequest{})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println("respData", string(resp.Data), resp.Error)
 }
