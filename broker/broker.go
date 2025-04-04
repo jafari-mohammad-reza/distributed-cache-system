@@ -25,6 +25,7 @@ type Subscriber struct {
 
 type Broker struct {
 	subscribers map[string][]*Subscriber
+	Queue       map[string]*Message // TODO: implement queue
 	mutex       sync.Mutex
 }
 
@@ -37,7 +38,6 @@ func NewBroker() *Broker {
 func (b *BrokerService) Pub(ctx context.Context, req *PubRequest) (*Error, error) {
 	b.broker.mutex.Lock()
 	defer b.broker.mutex.Unlock()
-
 	if subs, exists := b.broker.subscribers[req.Topic]; exists {
 		for _, sub := range subs {
 			select {
@@ -104,7 +104,7 @@ func InitBroker(port int) error {
 
 type MsgBroker struct {
 	Port   int
-	conn *grpc.ClientConn
+	conn   *grpc.ClientConn
 	client BrokerClient
 }
 
@@ -117,34 +117,51 @@ func NewMsgBroker(port int) *MsgBroker {
 	client := NewBrokerClient(conn)
 	return &MsgBroker{
 		Port:   port,
-		conn: conn,
+		conn:   conn,
 		client: client,
 	}
 }
 
-func (mb *MsgBroker) PublishMessage(topic, message string) {
+func (mb *MsgBroker) PublishMessage(topic string, data []byte) {
 	_, err := mb.client.Pub(context.Background(), &PubRequest{
 		Topic:   topic,
-		Payload: []byte(message),
+		Payload: data,
 	})
 	if err != nil {
 		log.Fatalf("Failed to publish message: %v", err)
 	}
 	fmt.Println("Message Published to topic:", topic)
 }
-func (mb *MsgBroker) SubscribeToTopic(topic string, receiver chan *Message) {
-	stream, err := mb.client.Sub(context.Background(), &SubRequest{Topic: topic})
-	if err != nil {
-		log.Fatalf("Failed to subscribe: %v", err)
-	}
+func (mb *MsgBroker) SubscribeToTopic(topic string, limit int) <-chan *Message {
+	receiver := make(chan *Message, limit)
 
-	fmt.Println("Listening for messages on topic:", topic)
-	for {
-		msg, err := stream.Recv()
+	go func() {
+		stream, err := mb.client.Sub(context.Background(), &SubRequest{Topic: topic})
 		if err != nil {
-			log.Fatalf("Error receiving message: %v", err)
+			log.Printf("Failed to subscribe: %v", err)
+			close(receiver)
+			return
 		}
-		fmt.Println("Received Message:", string(msg.Payload))
-		receiver <- msg
-	}
+
+		fmt.Println("Listening for messages on topic:", topic)
+
+		for {
+			msg, err := stream.Recv()
+			if err != nil {
+				log.Printf("Stream closed or error: %v", err)
+				close(receiver)
+				return
+			}
+
+			fmt.Println("Received Message:", string(msg.Payload))
+
+			select {
+			case receiver <- msg:
+			default:
+				log.Println("Receiver channel full, dropping message")
+			}
+		}
+	}()
+
+	return receiver
 }

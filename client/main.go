@@ -17,6 +17,8 @@ func init() {
 	if err != nil {
 		log.Fatalf("Failed to connect to broker: %v", err)
 	}
+
+	fmt.Println("command client created")
 	commandClient = pb.NewCommandClient(conn)
 }
 
@@ -32,6 +34,5 @@ var rootCmd = &cobra.Command{
 }
 
 func InitClient() error {
-
 	return rootCmd.Execute()
 }
