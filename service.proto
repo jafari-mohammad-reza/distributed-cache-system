@@ -18,8 +18,14 @@ service Command {
 service Discovery {
     rpc GetLeader(google.protobuf.Empty) returns (DiscoveryResponse);
 }
+message SendLogRequest {
+    string command = 1;
+    repeated string args=2;
+    string time = 3;
+}
 service Node {
     rpc GetLog(GetLogRequest) returns (GetLogResponse);
+    rpc SendLog(SendLogRequest) returns (google.protobuf.Empty);
 }
 message GetLogRequest {
     string start =1;

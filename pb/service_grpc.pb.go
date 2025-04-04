@@ -300,7 +300,8 @@ var Discovery_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	Node_GetLog_FullMethodName = "/pb.Node/GetLog"
+	Node_GetLog_FullMethodName  = "/pb.Node/GetLog"
+	Node_SendLog_FullMethodName = "/pb.Node/SendLog"
 )
 
 // NodeClient is the client API for Node service.
@@ -308,6 +309,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NodeClient interface {
 	GetLog(ctx context.Context, in *GetLogRequest, opts ...grpc.CallOption) (*GetLogResponse, error)
+	SendLog(ctx context.Context, in *SendLogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type nodeClient struct {
@@ -328,11 +330,22 @@ func (c *nodeClient) GetLog(ctx context.Context, in *GetLogRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *nodeClient) SendLog(ctx context.Context, in *SendLogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Node_SendLog_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NodeServer is the server API for Node service.
 // All implementations must embed UnimplementedNodeServer
 // for forward compatibility.
 type NodeServer interface {
 	GetLog(context.Context, *GetLogRequest) (*GetLogResponse, error)
+	SendLog(context.Context, *SendLogRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedNodeServer()
 }
 
@@ -345,6 +358,9 @@ type UnimplementedNodeServer struct{}
 
 func (UnimplementedNodeServer) GetLog(context.Context, *GetLogRequest) (*GetLogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLog not implemented")
+}
+func (UnimplementedNodeServer) SendLog(context.Context, *SendLogRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendLog not implemented")
 }
 func (UnimplementedNodeServer) mustEmbedUnimplementedNodeServer() {}
 func (UnimplementedNodeServer) testEmbeddedByValue()              {}
@@ -385,6 +401,24 @@ func _Node_GetLog_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Node_SendLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServer).SendLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Node_SendLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServer).SendLog(ctx, req.(*SendLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Node_ServiceDesc is the grpc.ServiceDesc for Node service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -395,6 +429,10 @@ var Node_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLog",
 			Handler:    _Node_GetLog_Handler,
+		},
+		{
+			MethodName: "SendLog",
+			Handler:    _Node_SendLog_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

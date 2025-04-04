@@ -52,7 +52,7 @@ func (n *Node) InitCacheNode() error {
 	}
 	rpcServer := grpc.NewServer()
 	pb.RegisterCommandServer(rpcServer, NewCommandService(n))
-	pb.RegisterNodeServer(rpcServer, NewNodeService())
+	pb.RegisterNodeServer(rpcServer, NewNodeService(n))
 	go n.registerNode()
 	fmt.Printf("cache running on port: %d\n", n.Port)
 	return rpcServer.Serve(ln)
@@ -166,28 +166,28 @@ func (n *Node) syncFromLeader(leader int, localEntries []CommandLog) {
 		n.execCommand(entry.Command, entry.Args)
 	}
 }
-func (n *Node) execCommand(command string, args []interface{}) {
+func (n *Node) execCommand(command string, args []string) {
 	switch command {
 	case "SET":
 		if len(args) < 3 {
 			log.Println("Invalid SET args:", args)
 			return
 		}
-		key, _ := args[0].(string)
-		val, _ := args[1].(string)
+		key := args[0]
+		val := args[1]
 
-		expFloat, ok := args[2].(float64)
-		if !ok {
-			log.Println("Invalid TTL in SET:", args[2])
+		exp, err := strconv.Atoi(args[2])
+		if err != nil {
+			log.Println("Invalid TTL in SET:", args[2], err.Error())
 			return
 		}
-		n.storage.Set(key, []byte(val), time.Duration(expFloat))
+		n.storage.Set(key, []byte(val), time.Duration(exp))
 	case "DEL":
 		if len(args) < 1 {
 			log.Println("Invalid DEL args:", args)
 			return
 		}
-		key, _ := args[0].(string)
+		key := args[0]
 		n.storage.Del(key)
 	}
 }

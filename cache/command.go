@@ -4,15 +4,19 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"os"
 	"time"
 
 	pb "github.com/jafari-mohammad-reza/distributed-cache-system/pb"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type CommandLog struct {
 	Command   string
-	Args      []interface{}
+	Args      []string
 	TimeStamp time.Time
 }
 
@@ -34,6 +38,12 @@ func (c *CommandService) Set(ctx context.Context, req *pb.SetCmdRequest) (*pb.Se
 			Message: err.Error(),
 		}}, nil
 	}
+	AppendCommandToLog("SET", req.Key, string(req.Value), string(req.Ttl))
+	args := []string{}
+	args = append(args, req.Key)
+	args = append(args, string(req.Value))
+	args = append(args, string(req.Ttl))
+	go c.sendLogToFollowers(CommandLog{Command: "SET", Args: args, TimeStamp: time.Now()})
 	return &pb.SetCmdResponse{}, nil
 }
 func (c *CommandService) Get(ctx context.Context, req *pb.GetCmdRequest) (*pb.GetCmdResponse, error) {
@@ -54,15 +64,35 @@ func (c *CommandService) Del(ctx context.Context, req *pb.DeleteCmdRequest) (*pb
 			Message: err.Error(),
 		}}, nil
 	}
+	AppendCommandToLog("DEL", req.Key)
 	return &pb.DeleteCmdResponse{}, nil
+}
+func (c *CommandService) sendLogToFollowers(clog CommandLog) {
+	for port, rule := range c.node.discoveredNodes {
+		if rule != Master {
+			conn, err := grpc.NewClient(fmt.Sprint("localhost:%d", port))
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			client := pb.NewNodeClient(conn)
+			defer conn.Close()
+			_, err = client.SendLog(context.Background(), &pb.SendLogRequest{Command: clog.Command, Args: clog.Args, Time: clog.TimeStamp.String()})
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+		}
+	}
 }
 
 type NodeService struct {
 	pb.UnimplementedNodeServer
+	node *Node
 }
 
-func NewNodeService() *NodeService {
-	return &NodeService{}
+func NewNodeService(node *Node) *NodeService {
+	return &NodeService{
+		node: node,
+	}
 }
 
 func (n *NodeService) GetLog(ctx context.Context, req *pb.GetLogRequest) (*pb.GetLogResponse, error) {
@@ -122,7 +152,15 @@ func (n *NodeService) GetLog(ctx context.Context, req *pb.GetLogRequest) (*pb.Ge
 
 	return &pb.GetLogResponse{Data: data}, nil
 }
-func AppendCommandToLog(cmd string, args ...interface{}) error {
+func (n *NodeService) SendLog(ctx context.Context, req *pb.SendLogRequest) (*emptypb.Empty, error) {
+	fmt.Println("log received")
+	if err := AppendCommandToLog(req.Command, req.Args...); err != nil {
+		log.Fatal("follower appending log", err.Error())
+	}
+	n.node.execCommand(req.Command, req.Args)
+	return nil, nil
+}
+func AppendCommandToLog(cmd string, args ...string) error {
 	entry := CommandLog{
 		Command:   cmd,
 		Args:      args,
