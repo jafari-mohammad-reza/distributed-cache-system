@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	pb "github.com/jafari-mohammad-reza/distributed-cache-system/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -38,11 +40,11 @@ func (c *CommandService) Set(ctx context.Context, req *pb.SetCmdRequest) (*pb.Se
 			Message: err.Error(),
 		}}, nil
 	}
-	AppendCommandToLog("SET", req.Key, string(req.Value), string(req.Ttl))
+	AppendCommandToLog("SET", req.Key, string(req.Value), strconv.Itoa(int(req.Ttl)))
 	args := []string{}
 	args = append(args, req.Key)
 	args = append(args, string(req.Value))
-	args = append(args, string(req.Ttl))
+	args = append(args, strconv.Itoa(int(req.Ttl)))
 	go c.sendLogToFollowers(CommandLog{Command: "SET", Args: args, TimeStamp: time.Now()})
 	return &pb.SetCmdResponse{}, nil
 }
@@ -70,7 +72,7 @@ func (c *CommandService) Del(ctx context.Context, req *pb.DeleteCmdRequest) (*pb
 func (c *CommandService) sendLogToFollowers(clog CommandLog) {
 	for port, rule := range c.node.discoveredNodes {
 		if rule != Master {
-			conn, err := grpc.NewClient(fmt.Sprint("localhost:%d", port))
+			conn, err := grpc.NewClient(fmt.Sprintf("localhost:%d", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if err != nil {
 				log.Fatal(err.Error())
 			}
